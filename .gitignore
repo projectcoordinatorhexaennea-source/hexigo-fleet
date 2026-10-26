@@ -1,0 +1,7 @@
+.env
+node_modules
+cloudflared.exe
+*.bat
+*.bak.js
+*.bak.css
+*.bak.html

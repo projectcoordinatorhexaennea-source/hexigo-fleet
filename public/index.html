@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Hexigo – Real-Time Fleet Visibility</title>
+<link rel="icon" type="image/svg+xml" href="logo.svg">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="styles.css?v=16">
+</head>
+<body>
+<div id="push-notify" class="push-notify">
+  <div class="push-logo"><img src="hexigo-brand-logo.png" alt="Hexigo"></div>
+  <div class="push-content">
+    <div class="push-title" id="push-title">ignition ON</div>
+    <div class="push-body" id="push-body">TN04BD8146 ignition ON</div>
+  </div>
+  <div class="push-time">now</div>
+</div>
+<div id="app"><div id="view"></div></div>
+<nav id="nav" class="nav" hidden></nav>
+<nav id="vnav" class="nav vnav" hidden></nav>
+<div id="toast" class="toast" hidden></div>
+
+<!-- Legend List Modal with Small Font (Matching Specification) -->
+<div id="legend-modal" class="legend-modal-backdrop" hidden>
+  <div class="legend-modal-box">
+    <div class="legend-modal-header">
+      <h2>Legend List</h2>
+      <button class="btn-close-legend" data-act="closelegend" aria-label="Close">✕</button>
+    </div>
+    <div class="legend-modal-body">
+      <table class="legend-table">
+        <thead>
+          <tr>
+            <th style="width:110px">Legend/Icon</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b style="color:#f8fafc">Active</b></td>
+            <td>Active count represent the total number of Vehicles.</td>
+          </tr>
+          <tr>
+            <td><b style="color:#3b82f6">InActive</b></td>
+            <td>InActive count represent the total number of Vehicles which GPS uninstalled but exist in system.</td>
+          </tr>
+          <tr>
+            <td><b style="color:#10b981">Moving</b></td>
+            <td>Represent the vehicle is currently in moving status.</td>
+          </tr>
+          <tr>
+            <td><b style="color:#f59e0b">Idle</b></td>
+            <td>Represent that vehicle is stop from more than 10 mins &amp; less than 15 mins.</td>
+          </tr>
+          <tr>
+            <td><b style="color:#ef4444">Parked</b></td>
+            <td>Represent that vehicle is stop from more than 15 mins &amp; less than 1 days.</td>
+          </tr>
+          <tr>
+            <td><b style="color:#94a3b8">Non Reporting</b></td>
+            <td>Represent that the GPS device is not giving any data. Case 1 - Either vehicle not moving from last 7 days. Case 2 - Network issue or power input issue Case 3 - GPS Device issue.</td>
+          </tr>
+          <tr>
+            <td><div class="legend-box-sample planned"></div></td>
+            <td>Planned Work place/Road Route</td>
+          </tr>
+          <tr>
+            <td><div class="legend-box-sample actual"></div></td>
+            <td>Actual track followed by the Vehicle</td>
+          </tr>
+          <tr>
+            <td><div class="legend-box-sample playback"></div></td>
+            <td>Playback Vehicle track route</td>
+          </tr>
+          <tr>
+            <td><div class="legend-pin green"><span>S</span></div></td>
+            <td>Vehicle Track start point</td>
+          </tr>
+          <tr>
+            <td><div class="legend-pin red"><span>E</span></div></td>
+            <td>Track end Point</td>
+          </tr>
+          <tr>
+            <td><div class="legend-car-pin green">🚗</div></td>
+            <td>Real time location of moving vehicle</td>
+          </tr>
+          <tr>
+            <td><div class="legend-car-pin red">🚗</div></td>
+            <td>Real time location of Parked vehicle</td>
+          </tr>
+          <tr>
+            <td><div class="legend-car-pin orange">🚗</div></td>
+            <td>Real time location of Idle vehicle</td>
+          </tr>
+          <tr>
+            <td><div class="legend-car-pin blue">🚗</div></td>
+            <td>Inactive Vehicle</td>
+          </tr>
+          <tr>
+            <td><div class="legend-stop-pin green">🎯</div></td>
+            <td>Location where Vehicle stop for less than 10 mins</td>
+          </tr>
+          <tr>
+            <td><div class="legend-stop-pin purple">🎯</div></td>
+            <td>Location where Vehicle stop for more than 10 mins &amp; less than 15 mins</td>
+          </tr>
+          <tr>
+            <td><div class="legend-stop-pin darkred">🎯</div></td>
+            <td>Location where vehicle stop for more than 15 mins</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Interactive Google Street View Modal -->
+<div id="streetview-modal" class="streetview-modal-backdrop" hidden>
+  <div class="streetview-modal-box">
+    <div class="streetview-modal-header">
+      <h3>
+        <span style="font-size:18px">📍</span>
+        <span id="sv-title">Street View – TN04BD8146</span>
+      </h3>
+      <button class="btn-close-legend" data-act="closestreetview" aria-label="Close">✕</button>
+    </div>
+    <div class="streetview-modal-body">
+      <iframe id="sv-iframe" src="" allowfullscreen loading="lazy" referrerpolicy="no-referrer"></iframe>
+    </div>
+    <div class="streetview-modal-footer">
+      <div style="font-size:11.5px;color:var(--mute)">
+        📍 <span id="sv-coords">17.55778, 74.05203</span>
+      </div>
+      <div style="display:flex;gap:8px">
+        <a id="sv-external-link" href="#" target="_blank" rel="noopener noreferrer" class="btn-action-sm btn-action-primary">
+          🚀 Open in Google Maps
+        </a>
+        <button class="btn-action-sm" data-act="closestreetview">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="config.js?v=16"></script>
+<script src="app.js?v=18"></script>
+</body>
+</html>
