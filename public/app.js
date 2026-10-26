@@ -288,7 +288,7 @@
           if (!tipEl) {
             tipEl = document.createElement('div');
             tipEl.className = 'pegman-drag-tip';
-            tipEl.textContent = '📍 Drop Pegman anywhere on the map for Street View';
+            tipEl.textContent = '📍 Drop Pegman on the map — opens Street View at vehicle location';
             document.body.appendChild(tipEl);
           }
         }
@@ -311,9 +311,13 @@
 
           var rect = mapCanvas.getBoundingClientRect();
           if (dropX >= rect.left && dropX <= rect.right && dropY >= rect.top && dropY <= rect.bottom) {
-            var containerPoint = L.point(dropX - rect.left, dropY - rect.top);
-            var latlng = map.containerPointToLatLng(containerPoint);
-            dropPegmanOnMap(latlng.lat, latlng.lng, 'Street View – Drop Point');
+            // Always snap to current vehicle GPS — not the random drop point
+            var vehTarget = byId(S.sel) || V[0];
+            if (vehTarget && typeof vehTarget.lat === 'number' && typeof vehTarget.lon === 'number') {
+              dropPegmanOnMap(vehTarget.lat, vehTarget.lon, vehTarget.name + ' – Street View');
+            } else {
+              toast('No GPS fix for this vehicle');
+            }
           } else {
             toast('Drop Pegman onto the map to view Street View');
           }
@@ -350,10 +354,13 @@
     mapCanvas.addEventListener('drop', function (e) {
       e.preventDefault();
       btn.classList.remove('is-dragging');
-      var rect = mapCanvas.getBoundingClientRect();
-      var containerPoint = L.point(e.clientX - rect.left, e.clientY - rect.top);
-      var latlng = map.containerPointToLatLng(containerPoint);
-      dropPegmanOnMap(latlng.lat, latlng.lng, 'Street View – Drop Point');
+      // Always snap Pegman to the selected vehicle's GPS — not the random drop coordinate
+      var vehTarget = byId(S.sel) || V[0];
+      if (vehTarget && typeof vehTarget.lat === 'number' && typeof vehTarget.lon === 'number') {
+        dropPegmanOnMap(vehTarget.lat, vehTarget.lon, vehTarget.name + ' – Street View');
+      } else {
+        toast('No GPS fix for this vehicle');
+      }
     });
   }
 
